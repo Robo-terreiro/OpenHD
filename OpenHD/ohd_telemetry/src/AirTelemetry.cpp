@@ -170,12 +170,12 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
     // Essa lógica atua sobre a direção, mas a velocidade é definida pelos gatilhos.
     if (x_channel > 1600) {
         // Vira à direita
-        m_opt_motor_control->set_direction_motor_A(false);
-        m_opt_motor_control->set_direction_motor_B(true);
-    } else if (x_channel < 1400) {
-        // Vira à esquerda
         m_opt_motor_control->set_direction_motor_A(true);
         m_opt_motor_control->set_direction_motor_B(false);
+    } else if (x_channel < 1400) {
+        // Vira à esquerda
+        m_opt_motor_control->set_direction_motor_A(false);
+        m_opt_motor_control->set_direction_motor_B(true);
     }
 
     // Aplica a velocidade calculada.
