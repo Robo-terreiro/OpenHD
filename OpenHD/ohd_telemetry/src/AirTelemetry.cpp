@@ -158,7 +158,7 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
     } else if (trigger_down > 1000 && trigger_up <= 1000) {
         speed = m_opt_motor_control->mapp(trigger_down);
         std::cout << "Acelerando para trás. Velocidade: " << speed << "\n";
-        _opt_motor_control->set_direction_motor_A(false);
+        m_opt_motor_control->set_direction_motor_A(false);
         m_opt_motor_control->set_direction_motor_B(false);
     } else {
         // Gatilhos soltos, velocidade é zero
