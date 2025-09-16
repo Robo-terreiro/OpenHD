@@ -45,7 +45,7 @@ AirTelemetry::AirTelemetry() : MavlinkSystem(OHD_SYS_ID_AIR) {
         m_opt_gpio_control =
             std::make_unique<openhd::telemetry::rpi::GPIOControl>();
         m_opt_motor_control =
-            std::make_unique<openhd::telemetry::rpi::RaspberryPiRoverMotors>(22, 27, 23, 24, 18);
+            std::make_unique<openhd::telemetry::rpi::RaspberryPiRoverMotors>(17, 27, 23, 24, 18);
     }
     // NOTE: We don't call set ready yet, since we have to wait until other
     // modules have provided all their paramters.
@@ -154,12 +154,12 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
         speed = m_opt_motor_control->mapp(trigger_up);
         std::cout << "Acelerando para frente. Velocidade: " << speed << "\n";
         m_opt_motor_control->set_direction_motor_A(true);
-        m_opt_motor_control->set_direction_motor_B(false);
+        m_opt_motor_control->set_direction_motor_B(true);
     } else if (trigger_down > 1000 && trigger_up <= 1000) {
         speed = m_opt_motor_control->mapp(trigger_down);
         std::cout << "Acelerando para trás. Velocidade: " << speed << "\n";
-        m_opt_motor_control->set_direction_motor_A(false);
-        m_opt_motor_control->set_direction_motor_B(true);
+        _opt_motor_control->set_direction_motor_A(false);
+        m_opt_motor_control->set_direction_motor_B(false);
     } else {
         // Gatilhos soltos, velocidade é zero
         m_opt_motor_control->stop();
@@ -171,11 +171,11 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
     if (x_channel > 1600) {
         // Vira à direita
         m_opt_motor_control->set_direction_motor_A(false);
-        m_opt_motor_control->set_direction_motor_B(false);
+        m_opt_motor_control->set_direction_motor_B(true);
     } else if (x_channel < 1400) {
         // Vira à esquerda
         m_opt_motor_control->set_direction_motor_A(true);
-        m_opt_motor_control->set_direction_motor_B(true);
+        m_opt_motor_control->set_direction_motor_B(false);
     }
 
     // Aplica a velocidade calculada.
