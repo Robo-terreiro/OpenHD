@@ -432,3 +432,19 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode
+
+# Arquivos e pastas do CMake
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# Pastas do OpenHD
+ohd_common/
+ohd_interface/
+ohd_telemetry/
+ohd_video/
+
+# Binários e pacotes do OpenHD
+openhd
+openhd_*.deb
