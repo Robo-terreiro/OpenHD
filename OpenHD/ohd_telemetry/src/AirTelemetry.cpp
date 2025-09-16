@@ -152,12 +152,12 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
     // Lógica para controlar a velocidade (com base nos gatilhos)
     if (trigger_up > 1000 && trigger_down <= 1000) {
         speed = m_opt_motor_control->mapp(trigger_up);
-        std::cout << "Acelerando para frente. Velocidade: " << speed << "\n";
+        // std::cout << "Acelerando para frente. Velocidade: " << speed << "\n";
         m_opt_motor_control->set_direction_motor_A(true);
         m_opt_motor_control->set_direction_motor_B(true);
     } else if (trigger_down > 1000 && trigger_up <= 1000) {
         speed = m_opt_motor_control->mapp(trigger_down);
-        std::cout << "Acelerando para trás. Velocidade: " << speed << "\n";
+        // std::cout << "Acelerando para trás. Velocidade: " << speed << "\n";
         m_opt_motor_control->set_direction_motor_A(false);
         m_opt_motor_control->set_direction_motor_B(false);
     } else {
