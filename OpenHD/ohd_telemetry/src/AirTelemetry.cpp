@@ -104,93 +104,82 @@ void AirTelemetry::on_messages_fc(std::vector<MavlinkMessage>& messages) {
     m_ohd_main_component->check_fc_messages_for_actions(messages);
 }
 
-void AirTelemetry::on_messages_ground_unit(
-    std::vector<MavlinkMessage>& messages) {
+void AirTelemetry::on_messages_ground_unit(std::vector<MavlinkMessage>& messages) {
     // m_console->debug("on_messages_ground_unit {}", messages.size());
-    //   filter out heartbeats from the openhd ground unit,we do not need to send
-    //   them to the FC
+
+    // Filtra heartbeats da unidade de solo
     std::vector<MavlinkMessage> filtered_messages_fc;
     for (const auto& msg : messages) {
         const mavlink_message_t& m = msg.m;
-        if (static_cast<int>(m.msgid) == MAVLINK_MSG_ID_HEARTBEAT &&
-            m.sysid == OHD_SYS_ID_GROUND)
+        if (static_cast<int>(m.msgid) == MAVLINK_MSG_ID_HEARTBEAT && m.sysid == OHD_SYS_ID_GROUND) {
             continue;
+        }
         filtered_messages_fc.push_back(msg);
 
+        // Processa comandos de controle de motor
         if (static_cast<int>(m.msgid) == MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE) {
-            mavlink_rc_channels_override_t rc_override;
-            mavlink_msg_rc_channels_override_decode(&m, &rc_override);
-
-            // std::cout << "RC Override Recebido! Canais:\n";
-            // for (int i = 0; i < 16; i++) {
-            //   std::cout << "Canal " << (i + 1) << ": "
-            //             << ((&rc_override.chan1_raw)[i]) << "\n";
-            // }
-
-            // float joystick_x = ((&rc_override.chan1_raw)[0]);
-            // if (m_opt_gpio_control != nullptr) {
-            //   m_opt_gpio_control->update_pwm(pwm_value);
-            // }
-
-            // int x = ((&rc_override.chan1_raw)[0]);  // Ler canal 1
-            int x = ((&rc_override.chan1_raw)[0]);  // Ler canal 1
-
-            int trigger_down = ((&rc_override.chan1_raw)[4]);  // Ler canal 5
-            int trigger_up = ((&rc_override.chan1_raw)[5]);    // Ler canal 6
-
-            if (m_opt_motor_control != nullptr) {
-                int speed = 0;
-
-                if (trigger_up > 1000 && trigger_down <= 1000) {
-                    speed = m_opt_motor_control->mapp(trigger_up);
-                    std::cout << "Seed" << ": " << ((speed)) << "\n";
-                    m_opt_motor_control->set_speed(speed);
-                    m_opt_motor_control->set_direction_motor_A(true);
-                    m_opt_motor_control->set_direction_motor_B(false);
-                }
-                if (trigger_down > 1000 && trigger_up <= 1000) {
-                    speed = m_opt_motor_control->mapp(trigger_down);
-                    std::cout << "Seed" << ": " << ((speed)) << "\n";
-                    m_opt_motor_control->set_speed(speed);
-                    m_opt_motor_control->set_direction_motor_A(false);
-                    m_opt_motor_control->set_direction_motor_B(true);
-                }
-
-                if (x > 1600) {
-                    m_opt_motor_control->set_direction_motor_A(false);
-                    m_opt_motor_control->set_direction_motor_B(false);
-                } else if (x < 1400) {
-                    m_opt_motor_control->set_direction_motor_A(true);
-                    m_opt_motor_control->set_direction_motor_B(true);
-                } else if (trigger_up <= 1000 && trigger_down <= 1000) {
-                    m_opt_motor_control->stop();
-                }
-
-                m_opt_motor_control->set_speed(speed);
-            }
-
-            // if (m_opt_motor_control != nullptr) {
-            //     int speed = 0;
-
-            //     speed = m_opt_motor_control->map_speed(trigger_up);
-            //     std::cout << "Seed" << ": " << ((speed)) << "\n";
-
-            //     m_opt_motor_control->set_angle(x);
-
-            //     m_opt_motor_control->set_speed(speed);
-            // }
+            handle_rc_override(m);
         }
     }
+    
     send_messages_fc(filtered_messages_fc);
-    // any data created by an OpenHD component on the air pi only needs to be sent
-    // to the ground pi, the FC cannot do anything with it anyways.
+
+    // Qualquer dado de um componente OpenHD deve ser enviado apenas para a unidade de solo
     std::lock_guard<std::mutex> guard(m_components_lock);
     for (auto& component : m_components) {
         std::vector<MavlinkMessage> responses{};
-        OHDUtil::vec_append(responses,
-                            component->process_mavlink_messages(messages));
+        OHDUtil::vec_append(responses, component->process_mavlink_messages(messages));
         send_messages_ground_unit(responses);
     }
+}
+
+// Extrai a lógica de controle de RC para uma função separada
+void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
+    if (m_opt_motor_control == nullptr) {
+        return;
+    }
+
+    mavlink_rc_channels_override_t rc_override;
+    mavlink_msg_rc_channels_override_decode(&mav_msg, &rc_override);
+
+    // Acesso simplificado aos canais
+    const int x_channel = rc_override.chan1_raw;
+    const int trigger_down = rc_override.chan5_raw;
+    const int trigger_up = rc_override.chan6_raw;
+
+    int speed = 0;
+
+    // Lógica para controlar a velocidade (com base nos gatilhos)
+    if (trigger_up > 1000 && trigger_down <= 1000) {
+        speed = m_opt_motor_control->mapp(trigger_up);
+        std::cout << "Acelerando para frente. Velocidade: " << speed << "\n";
+        m_opt_motor_control->set_direction_motor_A(true);
+        m_opt_motor_control->set_direction_motor_B(false);
+    } else if (trigger_down > 1000 && trigger_up <= 1000) {
+        speed = m_opt_motor_control->mapp(trigger_down);
+        std::cout << "Acelerando para trás. Velocidade: " << speed << "\n";
+        m_opt_motor_control->set_direction_motor_A(false);
+        m_opt_motor_control->set_direction_motor_B(true);
+    } else {
+        // Gatilhos soltos, velocidade é zero
+        m_opt_motor_control->stop();
+        speed = 0;
+    }
+
+    // Lógica para controlar a direção (com base no canal X)
+    // Essa lógica atua sobre a direção, mas a velocidade é definida pelos gatilhos.
+    if (x_channel > 1600) {
+        // Vira à direita
+        m_opt_motor_control->set_direction_motor_A(false);
+        m_opt_motor_control->set_direction_motor_B(false);
+    } else if (x_channel < 1400) {
+        // Vira à esquerda
+        m_opt_motor_control->set_direction_motor_A(true);
+        m_opt_motor_control->set_direction_motor_B(true);
+    }
+
+    // Aplica a velocidade calculada.
+    m_opt_motor_control->set_speed(speed);
 }
 
 void AirTelemetry::loop_infinite(bool& terminate,

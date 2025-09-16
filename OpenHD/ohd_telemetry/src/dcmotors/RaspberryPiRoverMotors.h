@@ -32,54 +32,26 @@
 namespace openhd::telemetry::rpi {
 
 class RaspberryPiRoverMotors {
- public:
-  RaspberryPiRoverMotors(int in1, int in2, int in3, int in4, int pwm);
-  ~RaspberryPiRoverMotors();
+public:
+    RaspberryPiRoverMotors(int in1, int in2, int in3, int in4, int pwm);
+    ~RaspberryPiRoverMotors();
 
-  void set_speed(int speed);
-  void set_direction_motor_A(bool forward);
-  void set_direction_motor_B(bool forward);
-  void stop();
-  int mapp(int speed);
+    void set_speed(int speed);
+    void set_direction_motor_A(bool forward);
+    void set_direction_motor_B(bool forward);
+    void stop();
+    int mapp(int speed);
 
- private:
-  int m_in1;
-  int m_in2;
-  int m_in3;
-  int m_in4;
-  int m_pwm;
+private:
+    void set_direction(int forward_pin, int backward_pin, bool forward);
+
+    int m_in1;
+    int m_in2;
+    int m_in3;
+    int m_in4;
+    int m_pwm;
 };
 
-}  // namespace openhd::telemetry::rpi
+} // namespace openhd::telemetry::rpi
 
-#endif  // OPENHD_RASPBERRY_PI_ROVER_MOTORS_H
-
-// #ifndef OPENHD_RASPBERRY_PI_ROVER_MOTORS_H
-// #define OPENHD_RASPBERRY_PI_ROVER_MOTORS_H
-
-// #include <pigpio.h>
-
-// #include <iostream>
-// #include <memory>
-// #include <vector>
-
-// namespace openhd::telemetry::rpi {
-
-// class RaspberryPiRoverMotors {
-//    public:
-//     RaspberryPiRoverMotors(int in1, int pwm);
-//     ~RaspberryPiRoverMotors();
-
-//     void set_speed(int speed);
-//     void set_angle(int angle);
-//     void stop();
-//     int map_speed(int speed);
-
-//    private:
-//     int m_in1;
-//     int m_pwm;
-// };
-
-// }  // namespace openhd::telemetry::rpi
-
-// #endif  // OPENHD_RASPBERRY_PI_ROVER_MOTORS_H
+#endif // OPENHD_RASPBERRY_PI_ROVER_MOTORS_H
