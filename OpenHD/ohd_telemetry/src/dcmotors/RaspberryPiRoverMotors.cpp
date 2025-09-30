@@ -31,6 +31,9 @@ namespace openhd::telemetry::rpi {
         for (int pin : {m_brk_A, m_brk_B, m_motor_A, m_motor_B, m_pwm}) {
             gpioSetMode(pin, PI_OUTPUT);
         }
+
+        gpioWrite(m_brk_A, 0);
+        gpioWrite(m_brk_B, 0);
     }
 
     RaspberryPiRoverMotors::~RaspberryPiRoverMotors() {
