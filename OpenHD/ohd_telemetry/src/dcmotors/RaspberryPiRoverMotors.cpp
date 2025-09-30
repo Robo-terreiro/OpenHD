@@ -24,7 +24,7 @@
 
 namespace openhd::telemetry::rpi {
     RaspberryPiRoverMotors::RaspberryPiRoverMotors(int brk_A, int brk_B, int motor_A, int motor_B, int pwm)
-        : brk_A(brk_A), m_brk_B(brk_B), m_motor_A(motor_A), m_motor_B(motor_B), m_pwm(pwm) {
+        : m_brk_A(brk_A), m_brk_B(brk_B), m_motor_A(motor_A), m_motor_B(motor_B), m_pwm(pwm) {
         gpioTerminate();
         gpioInitialise();
         // Usa um loop para inicializar os pinos
@@ -56,8 +56,8 @@ namespace openhd::telemetry::rpi {
     }
 
     void RaspberryPiRoverMotors::stop() {
-        gpioWrite(m_brk_A, 0);
-        gpioWrite(m_brk_B, 0);
+        gpioWrite(m_brk_A, 1);
+        gpioWrite(m_brk_B, 1);
         // gpioWrite(m_motor_A, 0);
         // gpioWrite(m_motor_B, 0);
         gpioPWM(m_pwm, 0);
