@@ -33,7 +33,7 @@ namespace openhd::telemetry::rpi {
 
 class RaspberryPiRoverMotors {
 public:
-    RaspberryPiRoverMotors(int in1, int in2, int in3, int in4, int pwm);
+    RaspberryPiRoverMotors(int brk_A, int brk_B, int motor_A, int motor_B, int pwm);
     ~RaspberryPiRoverMotors();
 
     void set_speed(int speed);
@@ -43,12 +43,12 @@ public:
     int mapp(int speed);
 
 private:
-    void set_direction(int forward_pin, int backward_pin, bool forward);
+    void set_direction(int forward_pin, bool forward);
 
-    int m_in1;
-    int m_in2;
-    int m_in3;
-    int m_in4;
+    int m_brk_A;
+    int m_brk_B;
+    int m_motor_A;
+    int m_motor_B;
     int m_pwm;
 };
 

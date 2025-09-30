@@ -23,12 +23,12 @@
 #include "RaspberryPiRoverMotors.h"
 
 namespace openhd::telemetry::rpi {
-    RaspberryPiRoverMotors::RaspberryPiRoverMotors(int in1, int in2, int in3, int in4, int pwm)
-        : m_in1(in1), m_in2(in2), m_in3(in3), m_in4(in4), m_pwm(pwm) {
+    RaspberryPiRoverMotors::RaspberryPiRoverMotors(int brk_A, int brk_B, int motor_A, int motor_B, int pwm)
+        : brk_A(brk_A), m_brk_B(brk_B), m_motor_A(motor_A), m_motor_B(motor_B), m_pwm(pwm) {
         gpioTerminate();
         gpioInitialise();
         // Usa um loop para inicializar os pinos
-        for (int pin : {m_in1, m_in2, m_in3, m_in4, m_pwm}) {
+        for (int pin : {m_brk_A, m_brk_B, m_motor_A, m_motor_B, m_pwm}) {
             gpioSetMode(pin, PI_OUTPUT);
         }
     }
@@ -43,24 +43,23 @@ namespace openhd::telemetry::rpi {
     }
 
     // Função unificada para definir a direção de um motor
-    void RaspberryPiRoverMotors::set_direction(int forward_pin, int backward_pin, bool forward) {
+    void RaspberryPiRoverMotors::set_direction(int forward_pin, bool forward) {
         gpioWrite(forward_pin, forward ? 1 : 0);
-        gpioWrite(backward_pin, forward ? 0 : 1);
     }
 
     void RaspberryPiRoverMotors::set_direction_motor_A(bool forward) {
-        set_direction(m_in1, m_in2, forward);
+        set_direction(m_motor_A, forward);
     }
 
     void RaspberryPiRoverMotors::set_direction_motor_B(bool forward) {
-        set_direction(m_in3, m_in4, forward);
+        set_direction(m_motor_B, forward);
     }
 
     void RaspberryPiRoverMotors::stop() {
-        gpioWrite(m_in1, 0);
-        gpioWrite(m_in2, 0);
-        gpioWrite(m_in3, 0);
-        gpioWrite(m_in4, 0);
+        gpioWrite(m_brk_A, 0);
+        gpioWrite(m_brk_B, 0);
+        gpioWrite(m_motor_A, 0);
+        gpioWrite(m_motor_B, 0);
         gpioPWM(m_pwm, 0);
     }
 
