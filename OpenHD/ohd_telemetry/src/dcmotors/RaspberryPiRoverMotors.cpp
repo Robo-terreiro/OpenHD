@@ -58,8 +58,8 @@ namespace openhd::telemetry::rpi {
     void RaspberryPiRoverMotors::stop() {
         gpioWrite(m_brk_A, 0);
         gpioWrite(m_brk_B, 0);
-        gpioWrite(m_motor_A, 0);
-        gpioWrite(m_motor_B, 0);
+        // gpioWrite(m_motor_A, 0);
+        // gpioWrite(m_motor_B, 0);
         gpioPWM(m_pwm, 0);
     }
 
