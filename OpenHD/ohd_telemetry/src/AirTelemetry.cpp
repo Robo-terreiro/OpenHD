@@ -144,42 +144,42 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
 
     // Acesso simplificado aos canais
     const int x_channel = rc_override.chan1_raw;
-    const int trigger_down = rc_override.chan5_raw;
-    const int trigger_up = rc_override.chan6_raw;
+    const int y_channel = rc_override.chan4_raw; 
 
-    int speed = 0;
+    // Lógica para controlar a velocidade (com base no analogico direito)
+    if (y_channel < 1480) {
+        if (x_channel > 1600) {
+            // Vira à direita
+            m_opt_motor_control->set_direction_motor_A(false);
+            m_opt_motor_control->set_direction_motor_B(false);
+        } else if (x_channel < 1400) {
+            // Vira à esquerda
+            m_opt_motor_control->set_direction_motor_A(true);
+            m_opt_motor_control->set_direction_motor_B(true);
+        }else{
+            m_opt_motor_control->set_direction_motor_A(true);
+            m_opt_motor_control->set_direction_motor_B(false);
+        }
+    m_opt_motor_control->set_speed((y_channel-1500)*(-0.51));
 
-    // Lógica para controlar a velocidade (com base nos gatilhos)
-    if (trigger_up > 1000 && trigger_down <= 1000) {
-        speed = m_opt_motor_control->mapp(trigger_up);
-        std::cout << "Acelerando para frente. Velocidade: " << speed << "\n";
-        m_opt_motor_control->set_direction_motor_A(true);
-        m_opt_motor_control->set_direction_motor_B(true);
-    } else if (trigger_down > 1000 && trigger_up <= 1000) {
-        speed = m_opt_motor_control->mapp(trigger_down);
-        std::cout << "Acelerando para trás. Velocidade: " << speed << "\n";
-        m_opt_motor_control->set_direction_motor_A(false);
-        m_opt_motor_control->set_direction_motor_B(false);
-    } else {
-        // Gatilhos soltos, velocidade é zero
-        m_opt_motor_control->stop();
-        speed = 0;
+    } else if (y_channel > 1580) {
+        if (x_channel > 1600) {
+            // Vira à direita
+            m_opt_motor_control->set_direction_motor_A(true);
+            m_opt_motor_control->set_direction_motor_B(true);
+        } else if (x_channel < 1400) {
+            // Vira à esquerda
+            m_opt_motor_control->set_direction_motor_A(false);
+            m_opt_motor_control->set_direction_motor_B(false);
+        }else{
+            m_opt_motor_control->set_direction_motor_A(false);
+            m_opt_motor_control->set_direction_motor_B(true);
+        }
+    m_opt_motor_control->set_speed((y_channel-1500)*0.51);  
+
+} else{
+    m_opt_motor_control->stop();
     }
-
-    // Lógica para controlar a direção (com base no canal X)
-    // Essa lógica atua sobre a direção, mas a velocidade é definida pelos gatilhos.
-    if (x_channel > 1600) {
-        // Vira à direita
-        m_opt_motor_control->set_direction_motor_A(true);
-        m_opt_motor_control->set_direction_motor_B(false);
-    } else if (x_channel < 1400) {
-        // Vira à esquerda
-        m_opt_motor_control->set_direction_motor_A(false);
-        m_opt_motor_control->set_direction_motor_B(true);
-    }
-
-    // Aplica a velocidade calculada.
-    m_opt_motor_control->set_speed(speed);
 }
 
 void AirTelemetry::loop_infinite(bool& terminate,
