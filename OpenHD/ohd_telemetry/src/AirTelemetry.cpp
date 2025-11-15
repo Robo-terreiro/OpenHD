@@ -144,41 +144,88 @@ void AirTelemetry::handle_rc_override(const mavlink_message_t& mav_msg) {
 
     // Acesso simplificado aos canais
     const int x_channel = rc_override.chan1_raw;
-    const int y_channel = rc_override.chan4_raw; 
+    const int y_channel = rc_override.chan4_raw;
 
-    // Lógica para controlar a velocidade (com base no analogico direito)
-    if (y_channel < 1480) {
-        if (x_channel > 1600) {
-            // Vira à direita
-            m_opt_motor_control->set_direction_motor_A(false);
-            m_opt_motor_control->set_direction_motor_B(false);
-        } else if (x_channel < 1400) {
-            // Vira à esquerda
-            m_opt_motor_control->set_direction_motor_A(true);
-            m_opt_motor_control->set_direction_motor_B(true);
-        }else{
-            m_opt_motor_control->set_direction_motor_A(true);
-            m_opt_motor_control->set_direction_motor_B(false);
-        }
-    m_opt_motor_control->set_speed((y_channel-1500)*(-0.51));
+    // Varíaveis globais
+    int pwm = 255;
+    int operation_range_up = 1520; // Dead zone = 20
+    int operation_range_down = 1480; // Dead zone = 20
+    const float xy_pwm_parameter = pwm / 960.0; // xy operation zone;
+    const float pwm_parameter = pwm / 480.0; // y operation zone
+    int speed = 0;
 
-    } else if (y_channel > 1580) {
-        if (x_channel > 1600) {
+    // Lógica para controlar a velocidade (com base no analogico esquerdo e direito)
+    if (y_channel < operation_range_down) {
+        if (x_channel > operation_range_up) {
+
+            int y_speed = operation_range_down - y_channel;
+            int x_speed = x_channel - operation_range_up;
+            speed = (y_speed + x_speed) * xy_pwm_parameter;
+
             // Vira à direita
+
+            m_opt_motor_control->set_direction_motor_A(false);
+            m_opt_motor_control->set_direction_motor_B(false);
+
+        } else if (x_channel < operation_range_down) {
+
+            int y_speed = operation_range_down - y_channel;
+            int x_speed = operation_range_down - x_channel;
+            speed = (y_speed + x_speed) * xy_pwm_parameter;
+
+            // Vira à esquerda
+
             m_opt_motor_control->set_direction_motor_A(true);
             m_opt_motor_control->set_direction_motor_B(true);
-        } else if (x_channel < 1400) {
+
+        }else{
+
+            int y_speed = operation_range_down - y_channel;
+            speed = y_speed * pwm_parameter;
+
+            m_opt_motor_control->set_direction_motor_A(true);
+            m_opt_motor_control->set_direction_motor_B(false);
+
+        }
+
+    m_opt_motor_control->set_speed(speed);
+
+    } else if (y_channel > operation_range_up) {
+        if (x_channel > operation_range_up) {
+
+            int y_speed = y_channel - operation_range_up;
+            int x_speed = x_channel - operation_range_up;
+            speed = (y_speed + x_speed) * xy_pwm_parameter;
+
+            // Vira à direita
+
+            m_opt_motor_control->set_direction_motor_A(true);
+            m_opt_motor_control->set_direction_motor_B(true);
+            
+        } else if (x_channel < operation_range_down) {
+            
+            int y_speed = y_channel - operation_range_up;
+            int x_speed = operation_range_down - x_channel;
+            speed = (y_speed + x_speed) * xy_pwm_parameter;
+
             // Vira à esquerda
             m_opt_motor_control->set_direction_motor_A(false);
             m_opt_motor_control->set_direction_motor_B(false);
         }else{
+
+            int y_speed = y_channel - operation_range_up;
+            speed = y_speed * pwm_parameter;
+
             m_opt_motor_control->set_direction_motor_A(false);
             m_opt_motor_control->set_direction_motor_B(true);
         }
-    m_opt_motor_control->set_speed((y_channel-1500)*0.51);  
+
+    m_opt_motor_control->set_speed(speed);  
 
 } else{
+
     m_opt_motor_control->stop();
+
     }
 }
 
